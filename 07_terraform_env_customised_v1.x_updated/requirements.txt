@@ -1,0 +1,5 @@
+boto
+boto3
+botocore
+awscli
+kubernetes

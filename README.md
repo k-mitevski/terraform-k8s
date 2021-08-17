@@ -11,4 +11,5 @@ Code samples:
 1. [Integrating the Helm provider with Terraform and EKS](04_terraform_helm_provider/README.md)
 1. [Encapsulating clusters as Terraform modules](05_terraform_env_module/README.md)
 1. [Parametrising clusters as Terraform modules](06_terraform_envs_customised/README.md)
+1. [Parametrising clusters as Terraform modules (terraform v1.x)](/07_terraform_env_customised_v1.x_updated/README.md)
 1. [Kubernetes files to deploy an "Hello World" application](kubernetes/README.md)
