@@ -8,7 +8,7 @@ terraform plan
 terraform apply
 ```
 
-It might take a while for the cluster to be creates (up to 15-20 minutes).
+It might take a while for the cluster to be created (up to 15-20 minutes).
 
 At the end you will have:
 
@@ -16,4 +16,4 @@ At the end you will have:
 1. A cluster for staging.
 1. A cluster for production.
 
-In the same folder you will find a kubeconfig file for each cluster.
+In the same folder, you will find a kubeconfig file for each cluster.
