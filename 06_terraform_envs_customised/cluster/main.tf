@@ -108,8 +108,8 @@ provider "helm" {
 
 resource "helm_release" "ingress" {
   name       = "ingress"
-  chart      = "aws-alb-ingress-controller"
-  repository = "http://storage.googleapis.com/kubernetes-charts-incubator"
+  chart      = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
   version    = "2.4.5"
 
   set {

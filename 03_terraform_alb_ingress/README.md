@@ -15,7 +15,7 @@ As soon as the cluster is ready, you should find a `kubeconfig_learnk8s` kubecon
 You can use the kubeconfig file to deploy the ALB Ingress controller with:
 
 ```bash
-helm install ingress incubator/aws-alb-ingress-controller \
+helm install ingress incubator/aws-load-balancer-controller \
   --set autoDiscoverAwsRegion=true \
   --set autoDiscoverAwsVpcID=true \
   --set clusterName=learnk8s
