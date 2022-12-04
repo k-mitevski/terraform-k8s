@@ -23,12 +23,12 @@ provider "kubernetes" {
 }
 
 module "eks-kubeconfig" {
-  source     = "hyperbadger/eks-kubeconfig/aws"
-  version    = "1.0.0"
+  source  = "hyperbadger/eks-kubeconfig/aws"
+  version = "1.0.0"
 
   depends_on = [module.eks]
-  cluster_id =  module.eks.cluster_id
-  }
+  cluster_id = module.eks.cluster_id
+}
 
 resource "local_file" "kubeconfig" {
   content  = module.eks-kubeconfig.kubeconfig
@@ -63,8 +63,8 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "18.30.3"
 
-  cluster_name    = "${local.cluster_name}"
-  cluster_version = "1.23"
+  cluster_name    = local.cluster_name
+  cluster_version = "1.24"
   subnet_ids      = module.vpc.private_subnets
 
   vpc_id = module.vpc.vpc_id

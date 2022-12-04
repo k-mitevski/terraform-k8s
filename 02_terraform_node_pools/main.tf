@@ -24,12 +24,12 @@ provider "kubernetes" {
 }
 
 module "eks-kubeconfig" {
-  source     = "hyperbadger/eks-kubeconfig/aws"
-  version    = "1.0.0"
+  source  = "hyperbadger/eks-kubeconfig/aws"
+  version = "1.0.0"
 
   depends_on = [module.eks]
-  cluster_id =  module.eks.cluster_id
-  }
+  cluster_id = module.eks.cluster_id
+}
 
 resource "local_file" "kubeconfig" {
   content  = module.eks-kubeconfig.kubeconfig
@@ -64,10 +64,10 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "18.30.3"
 
-  cluster_name    = "${local.cluster_name}"
-  cluster_version = "1.23"
-  subnet_ids        = module.vpc.private_subnets
-  vpc_id = module.vpc.vpc_id
+  cluster_name    = local.cluster_name
+  cluster_version = "1.24"
+  subnet_ids      = module.vpc.private_subnets
+  vpc_id          = module.vpc.vpc_id
 
   eks_managed_node_groups = {
     first = {
@@ -77,12 +77,12 @@ module "eks" {
 
       instance_type = "m5.large"
     }
-    second = {
+    gpu = {
       desired_capacity = 1
       max_capacity     = 10
       min_capacity     = 1
 
-      instance_type = "t2.micro"
+      instance_type = "p3.2xlarge"
     }
   }
 }

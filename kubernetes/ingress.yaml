@@ -7,9 +7,12 @@ metadata:
     kubernetes.io/ingress.class: alb
 spec:
   rules:
-    - http:
-        paths:
-          - path: /
-            backend:
-              serviceName: hello-kubernetes
-              servicePort: 80
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: hello-kubernetes
+            port:
+              number: 80
