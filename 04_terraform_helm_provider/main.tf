@@ -10,24 +10,35 @@ data "aws_eks_cluster_auth" "cluster" {
   name = module.eks.cluster_id
 }
 
+data "aws_availability_zones" "available" {}
+
+locals {
+  cluster_name = "learnk8s"
+}
+
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
   token                  = data.aws_eks_cluster_auth.cluster.token
-  load_config_file       = false
-  version                = "~> 1.11"
+
 }
 
-data "aws_availability_zones" "available" {
+module "eks-kubeconfig" {
+  source  = "hyperbadger/eks-kubeconfig/aws"
+  version = "1.0.0"
+
+  depends_on = [module.eks]
+  cluster_id = module.eks.cluster_id
 }
 
-locals {
-  cluster_name = "my-cluster"
+resource "local_file" "kubeconfig" {
+  content  = module.eks-kubeconfig.kubeconfig
+  filename = "kubeconfig_${local.cluster_name}"
 }
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "2.47.0"
+  version = "3.18.1"
 
   name                 = "k8s-vpc"
   cidr                 = "172.16.0.0/16"
@@ -51,15 +62,14 @@ module "vpc" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "12.2.0"
+  version = "18.30.3"
 
-  cluster_name    = "${local.cluster_name}"
-  cluster_version = "1.17"
-  subnets         = module.vpc.private_subnets
+  cluster_name    = local.cluster_name
+  cluster_version = "1.24"
+  subnet_ids      = module.vpc.private_subnets
+  vpc_id          = module.vpc.vpc_id
 
-  vpc_id = module.vpc.vpc_id
-
-  node_groups = {
+  eks_managed_node_groups = {
     first = {
       desired_capacity = 1
       max_capacity     = 10
@@ -68,11 +78,16 @@ module "eks" {
       instance_type = "m5.large"
     }
   }
-
-  write_kubeconfig   = true
-  config_output_path = "./"
-
-  workers_additional_policies = [aws_iam_policy.worker_policy.arn]
+  node_security_group_additional_rules = {
+    ingress_allow_access_from_control_plane = {
+      type                          = "ingress"
+      protocol                      = "tcp"
+      from_port                     = 9443
+      to_port                       = 9443
+      source_cluster_security_group = true
+      description                   = "Allow access from control plane to webhook port of AWS load balancer controller"
+    }
+  }
 }
 
 resource "aws_iam_policy" "worker_policy" {
@@ -82,21 +97,26 @@ resource "aws_iam_policy" "worker_policy" {
   policy = file("iam-policy.json")
 }
 
+resource "aws_iam_role_policy_attachment" "additional" {
+  for_each = module.eks.eks_managed_node_groups
+
+  policy_arn = aws_iam_policy.worker_policy.arn
+  role       = each.value.iam_role_name
+}
+
 provider "helm" {
-  version = "1.3.1"
   kubernetes {
     host                   = data.aws_eks_cluster.cluster.endpoint
     cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
     token                  = data.aws_eks_cluster_auth.cluster.token
-    load_config_file       = false
   }
 }
 
 resource "helm_release" "ingress" {
   name       = "ingress"
-  chart      = "aws-alb-ingress-controller"
-  repository = "http://storage.googleapis.com/kubernetes-charts-incubator"
-  version    = "1.0.2"
+  chart      = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  version    = "1.4.6"
 
   set {
     name  = "autoDiscoverAwsRegion"

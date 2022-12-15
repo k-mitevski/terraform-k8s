@@ -2,6 +2,9 @@ provider "aws" {
   region = "ap-south-1"
 }
 
+data "aws_availability_zones" "available" {
+}
+
 data "aws_eks_cluster" "cluster" {
   name = module.eks.cluster_id
 }
@@ -10,24 +13,32 @@ data "aws_eks_cluster_auth" "cluster" {
   name = module.eks.cluster_id
 }
 
+locals {
+  cluster_name = "learnk8s"
+}
+
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
   token                  = data.aws_eks_cluster_auth.cluster.token
-  load_config_file       = false
-  version                = "~> 1.11"
 }
 
-data "aws_availability_zones" "available" {
+module "eks-kubeconfig" {
+  source  = "hyperbadger/eks-kubeconfig/aws"
+  version = "1.0.0"
+
+  depends_on = [module.eks]
+  cluster_id = module.eks.cluster_id
 }
 
-locals {
-  cluster_name = "my-cluster"
+resource "local_file" "kubeconfig" {
+  content  = module.eks-kubeconfig.kubeconfig
+  filename = "kubeconfig_${local.cluster_name}"
 }
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "2.47.0"
+  version = "3.18.1"
 
   name                 = "k8s-vpc"
   cidr                 = "172.16.0.0/16"
@@ -51,15 +62,14 @@ module "vpc" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "12.2.0"
+  version = "18.30.3"
 
-  cluster_name    = "${local.cluster_name}"
-  cluster_version = "1.17"
-  subnets         = module.vpc.private_subnets
+  cluster_name    = local.cluster_name
+  cluster_version = "1.24"
+  subnet_ids      = module.vpc.private_subnets
+  vpc_id          = module.vpc.vpc_id
 
-  vpc_id = module.vpc.vpc_id
-
-  node_groups = {
+  eks_managed_node_groups = {
     first = {
       desired_capacity = 1
       max_capacity     = 10
@@ -67,15 +77,12 @@ module "eks" {
 
       instance_type = "m5.large"
     }
-    second = {
+    gpu = {
       desired_capacity = 1
       max_capacity     = 10
       min_capacity     = 1
 
-      instance_type = "t2.micro"
+      instance_type = "p3.2xlarge"
     }
   }
-
-  write_kubeconfig   = true
-  config_output_path = "./"
 }

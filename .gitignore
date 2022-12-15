@@ -4,3 +4,5 @@ terraform.tfstate.*.backup
 .terraform.tfstate.lock.info
 kubeconfig*
 .terraform
+.history
+.terraform.lock.*

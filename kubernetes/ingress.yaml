@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hello-kubernetes
@@ -7,9 +7,12 @@ metadata:
     kubernetes.io/ingress.class: alb
 spec:
   rules:
-    - http:
-        paths:
-          - path: /
-            backend:
-              serviceName: hello-kubernetes
-              servicePort: 80
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: hello-kubernetes
+            port:
+              number: 80

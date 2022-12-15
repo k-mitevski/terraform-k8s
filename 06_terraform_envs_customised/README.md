@@ -1,4 +1,4 @@
-# Parametrising clusters as Terraform modules
+# Parametrizing clusters as Terraform modules
 
 You can provision multiple EKS clusters with a single `terraform apply`:
 
@@ -8,7 +8,7 @@ terraform plan
 terraform apply
 ```
 
-It might take a while for the cluster to be creates (up to 15-20 minutes).
+It might take a while for the cluster to be created (up to 15-20 minutes).
 
 At the end you will have:
 
